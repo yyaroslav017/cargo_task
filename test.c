@@ -18,9 +18,111 @@ constexpr int RES_INVALID    = 2;
 
 #endif /* __PROGTEST__ */
 
-int comparePokerHands ( const int playerA[], const int playerB[] )
-{
-  /* TODO: Your code here */
+int getRank(int card) {
+    return card & 0xFF;
+}
+
+int getSuite(int card) {
+    return card & 0x180;
+}
+
+int compareRanks(const void* a, const void* b) {
+    return getRank(*(int*)a) - getRank(*(int*)b);
+}
+
+int isStraightFlush(const int hand[]) {
+    int suite = getSuite(hand[0]);
+    for (int i = 1; i < 5; i++) {
+        if (getSuite(hand[i]) != suite || getRank(hand[i]) != getRank(hand[i - 1]) + 1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int isFourOfAKind(const int hand[]) {
+    return (getRank(hand[0]) == getRank(hand[3]) || getRank(hand[1]) == getRank(hand[4]));
+}
+
+int isFullHouse(const int hand[]) {
+    return ((getRank(hand[0]) == getRank(hand[2]) && getRank(hand[3]) == getRank(hand[4])) ||
+            (getRank(hand[0]) == getRank(hand[1]) && getRank(hand[2]) == getRank(hand[4])));
+}
+
+int isFlush(const int hand[]) {
+    int suite = getSuite(hand[0]);
+    for (int i = 1; i < 5; i++) {
+        if (getSuite(hand[i]) != suite) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int isStraight(const int hand[]) {
+    for (int i = 1; i < 5; i++) {
+        if (getRank(hand[i]) != getRank(hand[i - 1]) + 1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int isThreeOfAKind(const int hand[]) {
+    return (getRank(hand[0]) == getRank(hand[2]) || getRank(hand[1]) == getRank(hand[3]) || getRank(hand[2]) == getRank(hand[4]));
+}
+
+int isTwoPair(const int hand[]) {
+    return ((getRank(hand[0]) == getRank(hand[1]) && getRank(hand[2]) == getRank(hand[3])) ||
+            (getRank(hand[0]) == getRank(hand[1]) && getRank(hand[3]) == getRank(hand[4])) ||
+            (getRank(hand[1]) == getRank(hand[2]) && getRank(hand[3]) == getRank(hand[4])));
+}
+
+int isOnePair(const int hand[]) {
+    for (int i = 0; i < 4; i++) {
+        if (getRank(hand[i]) == getRank(hand[i + 1])) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int getHandRank(const int hand[]) {
+    if (isStraightFlush(hand)) return 8;
+    if (isFourOfAKind(hand)) return 7;
+    if (isFullHouse(hand)) return 6;
+    if (isFlush(hand)) return 5;
+    if (isStraight(hand)) return 4;
+    if (isThreeOfAKind(hand)) return 3;
+    if (isTwoPair(hand)) return 2;
+    if (isOnePair(hand)) return 1;
+    return 0;
+}
+
+int comparePokerHands(const int playerA[], const int playerB[]) {
+    int handA[5], handB[5];
+    for (int i = 0; i < 5; i++) {
+        handA[i] = playerA[i];
+        handB[i] = playerB[i];
+    }
+
+    qsort(handA, 5, sizeof(int), compareRanks);
+    qsort(handB, 5, sizeof(int), compareRanks);
+
+    int rankA = getHandRank(handA);
+    int rankB = getHandRank(handB);
+
+    if (rankA != rankB) {
+        return rankA > rankB ? RES_WIN_A : RES_WIN_B;
+    }
+
+    for (int i = 4; i >= 0; i--) {
+        if (getRank(handA[i]) != getRank(handB[i])) {
+            return getRank(handA[i]) > getRank(handB[i]) ? RES_WIN_A : RES_WIN_B;
+        }
+    }
+
+    return RES_DRAW;
 }
 
 #ifndef __PROGTEST__
